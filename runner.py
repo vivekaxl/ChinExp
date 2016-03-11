@@ -54,55 +54,63 @@ def model_cart(training_indep, training_dep, testing_indep, testing_dep):
     mre = []
     for i, j in zip(testing_dep, predictions):
         if i != 0:
-            mre.append(abs(i - j) / float(i))
+            mre.append(abs(i - j) / float(i))  # abs(original - predicted)/original
         else:
             if i==j: mre.append(0)
 
     return mre
 
 
+def experiment(filename):
+    content = read_csv(filename)
+    len_data = len(content)
+    content_dict = {}
+    for c in content:
+        key = ",".join(map(str, c.decisions))
+        content_dict[key] = float(c.objective)
+
+    clusters = where_data_transformation(transform(filename))
+
+    train_independent = []
+    train_dependent = []
+
+    test_independent = []
+    test_dependent = []
+    for cluster in clusters:
+        indexes = range(len(cluster))
+        from random import choice
+        random_point_index = choice(indexes)
+        train_independent.append(cluster[random_point_index])
+
+        key = ",".join(map(str, map(float, cluster[random_point_index])))
+        train_dependent.append(content_dict[key])
+
+        # remove the training sample from test set
+        del indexes[random_point_index]
+
+        for index in indexes:
+            test_independent.append(cluster[index])
+            key = ",".join(map(str, map(float, cluster[index])))
+            test_dependent.append(content_dict[key])
+        assert(len(cluster) == len(indexes) + 1), "something is wrong"
+
+    mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    from numpy import median
+    return round( median(mre)*100, 3)
+
+
+
 def run_experiment1():
+    repeats = 20
     filenames = ["1_tp_read.csv", "2_tp_write.csv", "3_tp_read.csv", "4_tp_write.csv"]
     for filename in filenames:
-        # for easy look up
-        content = read_csv(filename)
-        len_data = len(content)
-        content_dict = {}
-        for c in content:
-            key = ",".join(map(str, c.decisions))
-            content_dict[key] = float(c.objective)
-
-        clusters = where_data_transformation(transform(filename))
-
-        train_independent = []
-        train_dependent = []
-
-        test_independent = []
-        test_dependent = []
-        for cluster in clusters:
-            indexes = range(len(cluster))
-            from random import choice
-            random_point_index = choice(indexes)
-            train_independent.append(cluster[random_point_index])
-
-            key = ",".join(map(str, map(float, cluster[random_point_index])))
-            train_dependent.append(content_dict[key])
-
-            # remove the training sample from test set
-            del indexes[random_point_index]
-
-            for index in indexes:
-                test_independent.append(cluster[index])
-                key = ",".join(map(str, map(float, cluster[index])))
-                test_dependent.append(content_dict[key])
-            assert(len(cluster) == len(indexes) + 1), "something is wrong"
-
-        mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
-        data_percentage = round((len(train_dependent)/len_data) * 100, 3)
-        from numpy import mean, median
-        print filename, round(min(mre)*100, 3), round(max(mre)*100, 3), round(mean(mre)*100, 3),round( median(mre)*100, 3), data_percentage
+        scores = []
+        for _ in xrange(repeats):
+            scores.append(experiment(filename))
+        from numpy import median
+        print filename, median(scores)
 
 
 if __name__ == "__main__":
-    print "filename| min | max | mean | median | Data(%)"
+    # print "filename min max mean median Data(%)"
     run_experiment1()
