@@ -49,6 +49,11 @@ def model_cart(training_indep, training_dep, testing_indep, testing_dep):
     return mre
 
 
+def number_of_lines(filename):
+    content = read_csv(filename)
+    return len(content)
+
+
 def strawman(percentage, filename):
     content = read_csv(filename)
     indexes = range(len(content))
@@ -75,12 +80,20 @@ def strawman(percentage, filename):
 
 
 def runner(filename):
-    percentages =[10*i for i in xrange(1,9)]
+    # percentages =[10*i for i in xrange(1,9)]
+    percentages =[30]
+    repeat = 20
     results = []
-    for percentage in percentages: results.append(strawman(percentage, filename))
-    print filename, results
+    for percentage in percentages:
+        for _ in xrange(repeat):
+            results.append(strawman(percentage, filename))
+
+    from numpy import median, percentile
+    print filename, median(results), (percentile(results, 75) - percentile(results, 25)), 0.3 * number_of_lines(filename)
 
 
 if __name__ == "__main__":
+    from random import seed
+    seed(1023)
     filenames = ["1_tp_read.csv", "2_tp_write.csv", "3_tp_read.csv", "4_tp_write.csv"]
     for filename in filenames: runner(filename)

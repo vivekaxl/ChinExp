@@ -96,19 +96,25 @@ def experiment(filename):
 
     mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
-    return round( median(mre)*100, 3)
+    return round( median(mre)*100, 3), len(train_dependent)
 
-
+def number_of_lines(filename):
+    content = read_csv(filename)
+    return len(content)
 
 def run_experiment1():
     repeats = 20
     filenames = ["1_tp_read.csv", "2_tp_write.csv", "3_tp_read.csv", "4_tp_write.csv"]
     for filename in filenames:
         scores = []
+        len_data = []
         for _ in xrange(repeats):
-            scores.append(experiment(filename))
-        from numpy import median
-        print filename, median(scores)
+            score, len = experiment(filename)
+            scores.append(score)
+            len_data.append(len)
+
+        from numpy import median, percentile
+        print filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data)
 
 
 if __name__ == "__main__":
