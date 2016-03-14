@@ -1,4 +1,6 @@
 from __future__ import division
+from os import listdir
+from os.path import isfile, join
 
 class data_item():
     def __init__(self, id, decisions, objective):
@@ -81,19 +83,29 @@ def strawman(percentage, filename):
 
 def runner(filename):
     # percentages =[10*i for i in xrange(1,9)]
-    percentages =[30]
+    percentages =[10, 20, 30]
     repeat = 20
     results = []
+    number_of_entries = number_of_lines(filename)
+    median_result = []
+    iqr_results = []
+    counts = []
+    from numpy import median, percentile
     for percentage in percentages:
         for _ in xrange(repeat):
             results.append(strawman(percentage, filename))
+        median_result.append(median(results))
+        iqr_results.append(percentile(results, 75) - percentile(results, 25))
+        counts.append(percentage * number_of_entries/100)
 
-    from numpy import median, percentile
-    print filename, median(results), (percentile(results, 75) - percentile(results, 25)), 0.3 * number_of_lines(filename)
+    print filename
+    for i in xrange(len(percentages)):
+        print percentages[i], median_result[i], iqr_results[i], counts[i]
 
 
 if __name__ == "__main__":
     from random import seed
     seed(1023)
-    filenames = ["1_tp_read.csv", "2_tp_write.csv", "3_tp_read.csv", "4_tp_write.csv"]
+    dir = "./Raw_Data/"
+    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
     for filename in filenames: runner(filename)

@@ -27,8 +27,16 @@ def removedup(filename):
     f = open(mod_name, "w")
     f.write(content)
     f.close()
+#
+# removedup("./Raw_Data/1_tp_read.csv")
+# removedup("./Raw_Data/2_tp_write.csv")
+# removedup("./Raw_Data/3_tp_read.csv")
+# removedup("./Raw_Data/4_tp_write.csv")
 
-removedup("./Raw_Data/1_tp_read.csv")
-removedup("./Raw_Data/2_tp_write.csv")
-removedup("./Raw_Data/3_tp_read.csv")
-removedup("./Raw_Data/4_tp_write.csv")
+
+from os import listdir
+from os.path import isfile, join
+
+dir = "./Raw_Data/"
+files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]
+for file in files: removedup(file)

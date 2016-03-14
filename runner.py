@@ -1,4 +1,6 @@
 from __future__ import division
+from os import listdir
+from os.path import isfile, join
 
 class data_item():
     def __init__(self, id, decisions, objective):
@@ -104,7 +106,8 @@ def number_of_lines(filename):
 
 def run_experiment1():
     repeats = 20
-    filenames = ["1_tp_read.csv", "2_tp_write.csv", "3_tp_read.csv", "4_tp_write.csv"]
+    dir = "./Raw_Data/"
+    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
     for filename in filenames:
         scores = []
         len_data = []
