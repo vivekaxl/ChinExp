@@ -18,15 +18,14 @@ def read_csv(filename, header=False):
 
     import csv
     data = []
-    f = open(transform(filename), 'rb')
-    reader = csv.reader(f)
-    for i,row in enumerate(reader):
-        if i == 0 and header is False: continue  # Header
-        elif i ==0 and header is True:
-            H = row
-            continue
-        data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
-    f.close()
+    with open(transform(filename), 'r') as f:
+        reader = csv.reader(f)
+        for i,row in enumerate(reader):
+            if i == 0 and header is False: continue  # Header
+            elif i ==0 and header is True:
+                H = row
+                continue
+            data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
     if header is True: return H, data
     return data
 
@@ -79,7 +78,7 @@ def experiment(filename):
     test_independent = []
     test_dependent = []
     for cluster in clusters:
-        indexes = range(len(cluster))
+        indexes = list(range(len(cluster)))
         from random import choice
         random_point_index = choice(indexes)
         train_independent.append(cluster[random_point_index])
@@ -111,13 +110,13 @@ def run_experiment1():
     for filename in filenames:
         scores = []
         len_data = []
-        for _ in xrange(repeats):
+        for _ in list(range(repeats)):
             score, len = experiment(filename)
             scores.append(score)
             len_data.append(len)
 
         from numpy import median, percentile
-        print filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data)
+        print(filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data))
 
 
 if __name__ == "__main__":
