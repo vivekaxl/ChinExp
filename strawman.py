@@ -2,6 +2,8 @@ from __future__ import division
 from os import listdir
 from os.path import isfile, join
 
+import model
+
 class data_item():
     def __init__(self, id, decisions, objective):
         self.id = id
@@ -51,7 +53,6 @@ def model_cart(training_indep, training_dep, testing_indep, testing_dep):
 
     return mre
 
-
 def number_of_lines(filename):
     content = read_csv(filename)
     return len(content)
@@ -82,7 +83,10 @@ def strawman(percentage, filename):
     #print(train_independent)
     #print(test_independent)
 
-    mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    #mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    model_selected = model.prediction_model(method="randomforest")
+    #model_selected = model.prediction_model(method="lasso",  max_iter=100000)
+    mre = model.model_mre(model_selected, train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
     return round(median(mre)*100, 3)
 
@@ -113,5 +117,5 @@ if __name__ == "__main__":
     from random import seed
     seed(1023)
     dir = "./Raw_Data/"
-    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
+    filenames = sorted([f for f in listdir(dir) if isfile(join(dir, f)) and "ds101" in f])
     for filename in filenames: runner(filename)

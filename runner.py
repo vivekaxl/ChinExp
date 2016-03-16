@@ -2,6 +2,8 @@ from __future__ import division
 from os import listdir
 from os.path import isfile, join
 
+import model
+
 class data_item():
     def __init__(self, id, decisions, objective):
         self.id = id
@@ -95,7 +97,9 @@ def experiment(filename):
             test_dependent.append(content_dict[key])
         assert(len(cluster) == len(indexes) + 1), "something is wrong"
 
-    mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    #model_selected = model.prediction_model(method="DecisionTree")
+    model_selected = model.prediction_model(method="elasticnet",  max_iter=10000)
+    mre = model.model_mre(model_selected, train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
     return round( median(mre)*100, 3), len(train_dependent)
 
@@ -106,7 +110,7 @@ def number_of_lines(filename):
 def run_experiment1():
     repeats = 20
     dir = "./Raw_Data/"
-    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
+    filenames = sorted([f for f in listdir(dir) if isfile(join(dir, f)) and "ds101" in f])
     for filename in filenames:
         scores = []
         len_data = []
