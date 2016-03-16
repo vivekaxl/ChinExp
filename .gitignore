@@ -60,5 +60,9 @@ target/
 
 # Created by .ignore support plugin (hsz.mobi)
 
-# # virtualenv
+# virtualenv
 .venv/
+
+# OS related
+*.swp
+*.pyc
