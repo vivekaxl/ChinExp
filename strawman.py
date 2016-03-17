@@ -56,12 +56,11 @@ def number_of_lines(filename):
     return len(content)
 
 
-def strawman(percentage, filename):
+def strawman(split_point, filename):
     content = read_csv(filename)
     indexes = range(len(content))
     from random import shuffle
     shuffle(indexes)
-    split_point = int(len(indexes) * percentage/100)
 
     train_indexes = indexes[:split_point]
     # test_indexes = indexes[:split_point]
@@ -83,9 +82,7 @@ def strawman(percentage, filename):
     return round(median(mre)*100, 3)
 
 
-def runner(filename):
-    # percentages =[10*i for i in xrange(1,9)]
-    percentages =[ 90, 92, 94, 96, 98, 99]
+def runner(filename, percentages):
     repeat = 20
     results = []
     number_of_entries = number_of_lines(filename)
@@ -98,11 +95,10 @@ def runner(filename):
             results.append(strawman(percentage, filename))
         median_result.append(median(results))
         iqr_results.append(percentile(results, 75) - percentile(results, 25))
-        counts.append(percentage * number_of_entries/100)
+        counts.append(percentage)
 
-    print filename
     for i in xrange(len(percentages)):
-        print percentages[i], median_result[i], iqr_results[i], counts[i]
+        print filename, percentages[i], median_result[i], iqr_results[i], counts[i]
 
 
 if __name__ == "__main__":
@@ -110,4 +106,16 @@ if __name__ == "__main__":
     seed(1023)
     dir = "./Raw_Data/"
     filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
-    for filename in filenames: runner(filename)
+    samples = {}
+    samples["1_tp_read.csv"] = [32*i for i in xrange(1, 7)]
+    samples["2_tp_write.csv"] = [32*i for i in xrange(1, 7)]
+    samples["3_tp_read.csv"] = [64*i for i in xrange(1, 7)]
+    samples["4_tp_write.csv"] = [64*i for i in xrange(1, 7)]
+    samples["ds101_ops_read.csv"] = [56*i for i in xrange(1, 7)]
+    samples["ds101_ops_write.csv"] = [56*i for i in xrange(1, 7)]
+    samples["ds101_rt_read.csv"] = [56*i for i in xrange(1, 7)]
+    samples["ds101_rt_write.csv"] = [56*i for i in xrange(1, 7)]
+    samples["ds101_tp_read.csv"] = [56*i for i in xrange(1, 7)]
+    samples["ds101_tp_write.csv"] = [56*i for i in xrange(1, 7)]
+    for filename in filenames:
+        runner(filename, samples[filename])

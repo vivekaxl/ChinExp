@@ -70,7 +70,7 @@ def euclidean_distance(list1, list2):
     return distance
 
 
-def hotspot(points):
+def hotspot(points, nop):
     distance_matrix = [[-1 for _ in xrange(len(points))] for _ in xrange(len(points))]
     for i,_ in enumerate(points):
         for j,_ in enumerate(points):
@@ -84,13 +84,16 @@ def hotspot(points):
     for i,point in enumerate(points):
         scores[i] = sum([1/d**2 for j,d in enumerate(distance_matrix[i]) if i!=j] )
 
-    return scores.index(max(scores))
+    sorted_indexes = [i[0] for i in sorted(enumerate(scores), key=lambda x:x[1])]
+
+    # the sorted in to deal with the del function in the parent function
+    return sorted(sorted_indexes[:nop], reverse=True)
 
 
 from random import choice
 
 
-def experiment(filename, sampling=None):
+def experiment(filename, sampling=None, nop=1):
     content = read_csv(filename)
     len_data = len(content)
     content_dict = {}
@@ -107,43 +110,47 @@ def experiment(filename, sampling=None):
     test_dependent = []
     for cluster in clusters:
         indexes = range(len(cluster))
-        random_point_index = sampling(cluster)
-        train_independent.append(cluster[random_point_index])
+        random_point_indexes = sampling(cluster, nop)
+        for random_point_index in random_point_indexes:
+            train_independent.append(cluster[random_point_index])
 
-        key = ",".join(map(str, map(float, cluster[random_point_index])))
-        train_dependent.append(content_dict[key])
+            key = ",".join(map(str, map(float, cluster[random_point_index])))
+            train_dependent.append(content_dict[key])
 
-        # remove the training sample from test set
-        del indexes[random_point_index]
+            # remove the training sample from test set
+            del indexes[random_point_index]
 
         for index in indexes:
             test_independent.append(cluster[index])
             key = ",".join(map(str, map(float, cluster[index])))
             test_dependent.append(content_dict[key])
-        assert(len(cluster) == len(indexes) + 1), "something is wrong"
+        assert(len(cluster) == len(indexes) + nop), "something is wrong"
 
     mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
     return round( median(mre)*100, 3), len(train_dependent)
 
+
 def number_of_lines(filename):
     content = read_csv(filename)
     return len(content)
+
 
 def run_experiment1():
     repeats = 20
     dir = "./Raw_Data/"
     filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
     for filename in filenames:
-        scores = []
-        len_data = []
-        for _ in xrange(repeats):
-            score, len = experiment(filename, hotspot)
-            scores.append(score)
-            len_data.append(len)
+        for np in xrange(1, 7):
+            scores = []
+            len_data = []
+            for _ in xrange(repeats):
+                score, len = experiment(filename, hotspot, nop=np)
+                scores.append(score)
+                len_data.append(len)
 
-        from numpy import median, percentile
-        print filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data)
+            from numpy import median, percentile
+            print np, filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data)
 
 
 
