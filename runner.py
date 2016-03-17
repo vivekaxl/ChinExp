@@ -2,6 +2,8 @@ from __future__ import division
 from os import listdir
 from os.path import isfile, join
 
+import model
+
 class data_item():
     def __init__(self, id, decisions, objective):
         self.id = id
@@ -18,15 +20,14 @@ def read_csv(filename, header=False):
 
     import csv
     data = []
-    f = open(transform(filename), 'rb')
-    reader = csv.reader(f)
-    for i,row in enumerate(reader):
-        if i == 0 and header is False: continue  # Header
-        elif i ==0 and header is True:
-            H = row
-            continue
-        data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
-    f.close()
+    with open(transform(filename), 'r') as f:
+        reader = csv.reader(f)
+        for i,row in enumerate(reader):
+            if i == 0 and header is False: continue  # Header
+            elif i ==0 and header is True:
+                H = row
+                continue
+            data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
     if header is True: return H, data
     return data
 
@@ -79,7 +80,7 @@ def experiment(filename):
     test_independent = []
     test_dependent = []
     for cluster in clusters:
-        indexes = range(len(cluster))
+        indexes = list(range(len(cluster)))
         from random import choice
         random_point_index = choice(indexes)
         train_independent.append(cluster[random_point_index])
@@ -96,7 +97,9 @@ def experiment(filename):
             test_dependent.append(content_dict[key])
         assert(len(cluster) == len(indexes) + 1), "something is wrong"
 
-    mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    #model_selected = model.prediction_model(method="DecisionTree")
+    model_selected = model.prediction_model(method="elasticnet",  max_iter=10000)
+    mre = model.model_mre(model_selected, train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
     return round( median(mre)*100, 3), len(train_dependent)
 
@@ -107,17 +110,17 @@ def number_of_lines(filename):
 def run_experiment1():
     repeats = 20
     dir = "./Raw_Data/"
-    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
+    filenames = sorted([f for f in listdir(dir) if isfile(join(dir, f)) and "ds101" in f])
     for filename in filenames:
         scores = []
         len_data = []
-        for _ in xrange(repeats):
+        for _ in list(range(repeats)):
             score, len = experiment(filename)
             scores.append(score)
             len_data.append(len)
 
         from numpy import median, percentile
-        print filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data)
+        print(filename, median(scores), percentile(scores, 75) - percentile(scores, 25), median(len_data))
 
 
 if __name__ == "__main__":

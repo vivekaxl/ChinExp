@@ -59,3 +59,10 @@ docs/_build/
 target/
 
 # Created by .ignore support plugin (hsz.mobi)
+
+# virtualenv
+.venv/
+
+# OS related
+*.swp
+*.pyc

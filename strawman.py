@@ -2,6 +2,8 @@ from __future__ import division
 from os import listdir
 from os.path import isfile, join
 
+import model
+
 class data_item():
     def __init__(self, id, decisions, objective):
         self.id = id
@@ -18,14 +20,15 @@ def read_csv(filename, header=False):
 
     import csv
     data = []
-    f = open(transform(filename), 'rb')
+    f = open(transform(filename), 'r')
     reader = csv.reader(f)
     for i,row in enumerate(reader):
         if i == 0 and header is False: continue  # Header
         elif i ==0 and header is True:
             H = row
             continue
-        data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
+        #data.append(data_item(i, map(float, row[:-1]), float(row[-1])))
+        data.append(data_item(i, [float(x) for x in row[:-1]], float(row[-1])))
     f.close()
     if header is True: return H, data
     return data
@@ -50,7 +53,6 @@ def model_cart(training_indep, training_dep, testing_indep, testing_dep):
 
     return mre
 
-
 def number_of_lines(filename):
     content = read_csv(filename)
     return len(content)
@@ -58,7 +60,7 @@ def number_of_lines(filename):
 
 def strawman(percentage, filename):
     content = read_csv(filename)
-    indexes = range(len(content))
+    indexes = list(range(len(content)))
     from random import shuffle
     shuffle(indexes)
     split_point = int(len(indexes) * percentage/100)
@@ -76,7 +78,15 @@ def strawman(percentage, filename):
     test_independent = [t.decisions for t in test_set]
     test_dependent = [t.objective for t in test_set]
 
-    mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    #print(train_set)
+    #print(test_set)
+    #print(train_independent)
+    #print(test_independent)
+
+    #mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+    model_selected = model.prediction_model(method="randomforest")
+    #model_selected = model.prediction_model(method="lasso",  max_iter=100000)
+    mre = model.model_mre(model_selected, train_independent, train_dependent, test_independent, test_dependent)
     from numpy import median
     return round(median(mre)*100, 3)
 
@@ -92,20 +102,20 @@ def runner(filename):
     counts = []
     from numpy import median, percentile
     for percentage in percentages:
-        for _ in xrange(repeat):
+        for _ in range(repeat):
             results.append(strawman(percentage, filename))
         median_result.append(median(results))
         iqr_results.append(percentile(results, 75) - percentile(results, 25))
         counts.append(percentage * number_of_entries/100)
 
-    print filename
-    for i in xrange(len(percentages)):
-        print percentages[i], median_result[i], iqr_results[i], counts[i]
+    print(filename)
+    for i in range(len(percentages)):
+        print(percentages[i], median_result[i], iqr_results[i], counts[i])
 
 
 if __name__ == "__main__":
     from random import seed
     seed(1023)
     dir = "./Raw_Data/"
-    filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
+    filenames = sorted([f for f in listdir(dir) if isfile(join(dir, f)) and "ds101" in f])
     for filename in filenames: runner(filename)
