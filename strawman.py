@@ -64,6 +64,7 @@ def strawman(percentage, filename):
     split_point = int(len(indexes) * percentage/100)
 
     train_indexes = indexes[:split_point]
+    # test_indexes = indexes[:split_point]
     test_indexes = indexes[split_point:]
     # print "Trainset: ", len(train_indexes), " Testset: ", len(test_indexes), percentage, split_point
 
@@ -77,13 +78,14 @@ def strawman(percentage, filename):
     test_dependent = [t.objective for t in test_set]
 
     mre = model_cart(train_independent, train_dependent, test_independent, test_dependent)
+
     from numpy import median
     return round(median(mre)*100, 3)
 
 
 def runner(filename):
     # percentages =[10*i for i in xrange(1,9)]
-    percentages =[10, 20, 30]
+    percentages =[ 90, 92, 94, 96, 98, 99]
     repeat = 20
     results = []
     number_of_entries = number_of_lines(filename)
