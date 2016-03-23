@@ -40,7 +40,8 @@ def where(data):
       c = aDist(mid, two)
       return (a**2-b**2+c**2)/(2*c)
 
-    if R < np.sqrt(N/2): # since we need 64 cells
+    # if R < np.sqrt(N/2): # since we need 64 cells
+    if R < 16: # since we need 64 cells
       clusters.append(dataset)
     else:
       _ = recurse(sorted(dataset,key=lambda F:proj(F))[:int(R/2)], step+1)
