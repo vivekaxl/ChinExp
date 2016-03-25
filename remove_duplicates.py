@@ -24,6 +24,8 @@ def removedup(filename):
     name = filename.split("/")[-1]
     mod_name = "./Data/"+name
 
+    print mod_name
+
     f = open(mod_name, "w")
     f.write(content)
     f.close()
