@@ -1,7 +1,7 @@
 from __future__ import division
 from os import listdir
 from os.path import isfile, join
-from numpy import median
+from numpy import median, mean
 
 
 class data_item():
@@ -25,17 +25,11 @@ def where_data_transformation(filename):
     return clusters
 
 
-def transform(filename):
-    return "./Data/" + filename
-
-
 def read_csv(filename, header=False):
-    def transform(filename):
-        return "./Data/" + filename
 
     import csv
     data = []
-    f = open(transform(filename), 'rb')
+    f = open((filename), 'rb')
     reader = csv.reader(f)
     for i,row in enumerate(reader):
         if i == 0 and header is False: continue  # Header
@@ -98,7 +92,7 @@ def localsearch2(filename, test_independent, test_dependent):
         content_dict[key] = float(c.objective)
 
     mres = []
-    clusters = where_data_transformation(transform(filename))
+    clusters = where_data_transformation( filename)
 
     train_independent = []
     train_dependent = []
@@ -121,9 +115,25 @@ def localsearch2(filename, test_independent, test_dependent):
     print len(train_dependent),
     clf.fit(train_independent, train_dependent)
     predicted_dependent = clf.predict(test_independent)
-    mres.append(median([abs(a-p)/(a+0.00001) for a, p in zip(predicted_dependent, test_dependent)])*100)
+    return mean([abs(a-p)/(a+0.00001) for a, p in zip(predicted_dependent, test_dependent)])
 
-    return mres
+
+def random_sampling(filename, test_independent, test_dependent):
+    content = read_csv(filename)
+    sampling_percent = 20
+
+    from random import shuffle
+    shuffle(content)
+    training = content[:int(len(content) * sampling_percent/100)]
+    train_independent = [t.decisions for t in training]
+    train_dependent = [t.objective for t in training]
+
+    from sklearn import tree
+    clf = tree.DecisionTreeRegressor()
+    print len(train_dependent),
+    clf.fit(train_independent, train_dependent)
+    predicted_dependent = clf.predict(test_independent)
+    return mean([abs(a-p)/(a+0.00001) for a, p in zip(predicted_dependent, test_dependent)])
 
 
 def localsearch3(percentage, filename):
@@ -150,33 +160,41 @@ def localsearch3(percentage, filename):
 
 
 if __name__ == "__main__":
-    dir = "./Data/"
+    dir = "./Final/"
     percentages = [0.6]
     filenames = [f for f in listdir(dir) if isfile(join(dir, f))]
+    methods = [localsearch2] #[localsearch2, random_sampling]
     for percentage in percentages:
-        print "---"*10
+
         for filename in filenames:
-            # split into train and test
-            h, content = read_csv(filename, header=True)
-            from random import shuffle
-            shuffle(content)
-            split_point = int(len(content) * percentage)
+            # print "---"*10
+            # print filename
+            for method in methods:
+                # print method.__name__
+                mres = []
+                for _ in xrange(10):
+                    # split into train and test
+                    h, content = read_csv(dir+filename, header=True)
+                    from random import shuffle
+                    shuffle(content)
+                    split_point = int(len(content) * percentage)
 
-            training = content[:split_point]
-            testing = content[split_point:]
+                    training = content[:split_point]
+                    testing = content[split_point:]
 
-            # generate a temp file
-            temp_content = ""
-            temp_content += ",".join(h) + "\n"
-            for train in training:
-                temp_content += ",".join(map(str, train.decisions)) + "," + str(train.objective) + "\n"
+                    # generate a temp file
+                    temp_content = ""
+                    temp_content += ",".join(h) + "\n"
+                    for train in training:
+                        temp_content += ",".join(map(str, train.decisions)) + "," + str(train.objective) + "\n"
 
-            f = open("./Data/temp.csv", "w")
-            f.write(temp_content)
-            f.close()
+                    f = open("/tmp/temp.csv", "w")
+                    f.write(temp_content)
+                    f.close()
 
-            mres = localsearch2("temp.csv", [t.decisions for t in training], [t.objective for t in training])
-            # print [round(m, 3) for m in mres],
-            print round(median(mres), 3)
+                    mres.append(method("/tmp/temp.csv", [t.decisions for t in training], [t.objective for t in training]))
+                    # print [round(m, 3) for m in mres],
+                from numpy import percentile
+                print round(median(mres), 3), round(percentile(mres, 75) - percentile(mres, 25), 3)
 
 
